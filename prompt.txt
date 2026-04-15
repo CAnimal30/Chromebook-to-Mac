@@ -1,0 +1,129 @@
+Take my existing HTML file and turn it into a polished, production-style soundboard app while keeping the current look and structure as close as possible.
+
+Important context:
+- This is for a live Spanish performance / class project.
+- People will be speaking from a script, and the app should trigger sound effects when specific words or phrases are spoken.
+- Prioritize reliability, speed, and simplicity over fancy architecture.
+- Manual buttons must always be the primary and most reliable control.
+- Use browser-based Web Speech API only (no backend required).
+
+Goals:
+- Keep it mostly the same visually, but make it cleaner, prettier, more usable, and much faster.
+- Build the entire app as a single self-contained HTML file.
+- Embed CSS and JavaScript directly into the HTML file.
+
+Core features:
+1. Create 15 sound buttons.
+2. Each button must support:
+   - a title label
+   - a cue word or phrase shown on or under the button
+   - an audio source
+
+3. Audio source support:
+   - direct MP3 URL preferred
+   - preload all sounds for instant playback
+
+4. Make the app extremely fast:
+   - preload all audio on page load
+   - cache audio objects
+   - show loading progress
+   - avoid unnecessary DOM work
+   - keep click-to-play latency extremely low
+
+5. Make it highly reliable:
+   - manual click always works
+   - add automatic speech-trigger mode as optional
+   - add debounce / cooldown so one phrase does not trigger repeatedly
+   - add a visible status indicator:
+     - Listening
+     - Not listening
+     - Error fallback
+
+6. Make the UI easy to use:
+   - large buttons
+   - clear labels
+   - strong contrast
+   - simple layout
+   - easy scanning during live use
+   - responsive design
+
+7. Add redundancy:
+   - manual click mode
+   - speech-trigger mode
+   - toggle speech recognition on/off
+   - stop-all button
+   - reset controls
+
+8. Language support:
+   - Spanish default (es-ES)
+   - English optional fallback
+   - configurable language
+
+9. Configuration section:
+Allow editing in code:
+
+- title
+- cue phrase
+- audio URL
+- optional cooldown
+- optional alternate phrases
+
+10. Safe matching system:
+- normalize text
+- ignore case
+- remove punctuation
+- support phrase variations
+- prevent repeated triggers
+
+11. Prevent accidental triggers:
+- cooldown timer
+- duplicate detection
+- debounce recognition
+
+12. UI polish:
+- modern card layout
+- subtle shadows
+- clean typography
+- hover effects
+- active state animations
+
+Manual Independence Requirements (Critical):
+- Manual button clicks must always work independently of speech recognition.
+- The soundboard must fully function even if speech recognition fails or is disabled.
+- Speech recognition must run in a separate layer and never block UI responsiveness.
+- If speech recognition errors occur, they must not interrupt manual playback.
+- Add toggle to enable/disable speech recognition instantly.
+- UI must show:
+  - Listening
+  - Not listening
+  - Error fallback mode
+- Manual playback must always be the primary and most reliable trigger.
+
+Speech recognition:
+- Use Web Speech API only
+- Continuous listening mode
+- Spanish recognition (es-ES)
+- Allow configurable language
+- Restart recognition automatically if it stops
+- Handle microphone permissions gracefully
+
+Audio behavior:
+- Preload all sounds
+- Stop currently playing sound when new sound plays
+- Add stop-all button
+- Fast playback
+- No lag
+
+Implementation rules:
+- Single HTML file
+- No backend
+- No API keys
+- Plain HTML, CSS, JavaScript
+- Clean, readable code
+- Well-commented
+
+Output:
+- Return the full updated HTML file
+- Preserve the current layout as much as possible
+- Add setup instructions at top comments
+- Note browser limitations
