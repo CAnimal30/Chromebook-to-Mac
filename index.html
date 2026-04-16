@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<!--
+  Spanish Soundboard - single-file production version
+
+  Setup:
+  1. Edit SOUND_CONFIG below. Keep exactly 15 entries.
+  2. Each entry supports:
+     - title: label shown on the tile
+     - cue: primary word or phrase for speech triggering
+     - audioUrl: direct MP3 URL strongly recommended for instant preload/playback
+     - cooldownMs: optional per-sound cooldown; default is 2500
+     - alternatePhrases: optional phrase variations for speech matching
+  3. Open this file from a local server or HTTPS for microphone access:
+     python3 -m http.server 4173
+     then visit http://127.0.0.1:4173/
+
+  Browser limitations:
+  - Web Speech API support is best in Chrome/Edge. Safari and Firefox support varies.
+  - Microphone access usually requires HTTPS or localhost/127.0.0.1.
+  - Browser autoplay policies may require one manual click before speech-triggered audio can play.
+  - Manual buttons are the primary control and work independently of speech recognition.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spanish Soundboard</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --panel:rgba(255,255,255,.94);
+      --panel-strong:#fff;
+      --border:#dbe4f0;
+      --text:#1f2937;
+      --muted:#64748b;
+      --accent:#4f46e5;
+      --accent-2:#4338ca;
+      --good:#15803d;
+      --good-soft:#dcfce7;
+      --warn:#b45309;
+      --warn-soft:#fef3c7;
+      --danger:#dc2626;
+      --danger-soft:#fee2e2;
+      --cyan:#0891b2;
+      --shadow:0 14px 34px rgba(15,23,42,.10);
+      --shadow-soft:0 8px 18px rgba(15,23,42,.08);
+      --radius:20px;
+      --radius-lg:26px;
+      --focus:rgba(79,70,229,.28);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ min-height:100%; }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 16% 0%, #eef2ff 0%, rgba(238,242,255,0) 38%),
+        radial-gradient(circle at 82% 8%, rgba(204,251,241,.68) 0%, rgba(204,251,241,0) 34%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      min-height:100vh;
+    }
+
+    button,input{ font:inherit; }
+
+    .app{
+      max-width:1380px;
+      margin:0 auto;
+      padding:26px 18px 34px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    }
+
+    .header{ min-width:260px; flex:1 1 620px; }
+    .header h1{
+      margin:0;
+      font-size:34px;
+      line-height:1.05;
+      letter-spacing:-.03em;
+    }
+
+    .header p{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.55;
+      max-width:920px;
+    }
+
+    .status-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+      align-items:center;
+    }
+
+    .status-pill{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.84);
+      color:var(--text);
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+      display:inline-flex;
+      gap:7px;
+      align-items:center;
+      min-height:32px;
+    }
+
+    .status-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:#94a3b8;
+      flex:0 0 auto;
+    }
+
+    .status-pill.listening{
+      border-color:rgba(21,128,61,.24);
+      background:rgba(220,252,231,.86);
+      color:#166534;
+    }
+    .status-pill.listening .status-dot{ background:#22c55e; box-shadow:0 0 0 4px rgba(34,197,94,.12); }
+
+    .status-pill.error{
+      border-color:#fecaca;
+      background:rgba(254,226,226,.86);
+      color:#991b1b;
+    }
+    .status-pill.error .status-dot{ background:#ef4444; }
+
+    .status-pill.ready{
+      border-color:rgba(21,128,61,.22);
+      background:rgba(220,252,231,.76);
+      color:#166534;
+    }
+
+    .status-pill.warn{
+      border-color:#fde68a;
+      background:rgba(254,243,199,.82);
+      color:#92400e;
+    }
+
+    .control-group{
+      display:flex;
+      gap:10px;
+      flex:0 0 auto;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .icon-btn,
+    .control-btn{
+      border:1px solid var(--border);
+      background:var(--panel);
+      color:var(--text);
+      border-radius:14px;
+      min-width:48px;
+      height:48px;
+      display:inline-grid;
+      place-items:center;
+      cursor:pointer;
+      box-shadow:var(--shadow-soft);
+      transition:transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s ease;
+      flex:0 0 auto;
+      font-weight:800;
+    }
+
+    .control-btn{
+      width:auto;
+      padding:0 14px;
+      grid-auto-flow:column;
+      gap:8px;
+      white-space:nowrap;
+    }
+
+    .icon-btn:hover,
+    .control-btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow); }
+
+    .icon-btn:active,
+    .control-btn:active{ transform:translateY(0); }
+
+    .icon-btn:focus-visible,
+    .control-btn:focus-visible,
+    .tile-button:focus-visible,
+    .action-btn:focus-visible,
+    .player-link-btn:focus-visible,
+    .player-close:focus-visible,
+    .input:focus-visible{
+      outline:4px solid var(--focus);
+      outline-offset:2px;
+    }
+
+    .icon-btn svg,
+    .control-btn svg{ width:21px; height:21px; }
+
+    .control-btn.primary{
+      background:linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
+      border-color:#c7d2fe;
+      color:#3730a3;
+    }
+
+    .control-btn.danger{
+      color:#991b1b;
+      border-color:#fecaca;
+      background:#fff;
+    }
+
+    .lang-btn{
+      letter-spacing:.04em;
+      font-size:12px;
+      padding:0;
+      width:50px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+      gap:18px;
+      margin-top:14px;
+    }
+
+    .tile{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);
+      padding:16px;
+      transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+      position:relative;
+    }
+
+    .tile:hover{
+      transform:translateY(-2px);
+      box-shadow:var(--shadow);
+    }
+
+    .tile.is-active{
+      border-color:rgba(79,70,229,.48);
+      box-shadow:0 18px 42px rgba(79,70,229,.18);
+    }
+
+    .tile.is-triggered .tile-button{
+      animation:pulseTile .38s ease;
+    }
+
+    @keyframes pulseTile{
+      0%{ transform:scale(.985); }
+      50%{ transform:scale(1.018); }
+      100%{ transform:scale(1); }
+    }
+
+    .tile-button{
+      width:100%;
+      height:190px;
+      border:0;
+      border-radius:18px;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(255,255,255,.40), transparent 28%),
+        linear-gradient(145deg, #6366f1, #8b5cf6 54%, #0ea5e9 116%);
+      transition:transform .14s ease, filter .14s ease;
+      outline:none;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding:12px;
+      isolation:isolate;
+    }
+
+    .tile-button::after{
+      content:"";
+      position:absolute;
+      inset:auto 12px 12px 12px;
+      height:42%;
+      background:linear-gradient(180deg, transparent, rgba(15,23,42,.18));
+      border-radius:16px;
+      z-index:-1;
+    }
+
+    .tile-button:hover{ filter:brightness(1.04); transform:scale(1.01); }
+    .tile-button:active{ transform:scale(.98); }
+
+    .button-inner{
+      width:100%;
+      min-height:130px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      pointer-events:none;
+      text-align:center;
+    }
+
+    .hotword{
+      max-width:100%;
+      padding:7px 11px;
+      border-radius:999px;
+      background:rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.20);
+      color:rgba(255,255,255,.98);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.01em;
+      overflow-wrap:anywhere;
+      line-height:1.25;
+    }
+
+    .play-icon{
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.20);
+      border:1px solid rgba(255,255,255,.24);
+      color:#fff;
+      font-size:27px;
+      font-weight:900;
+      text-shadow:0 4px 16px rgba(0,0,0,.22);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.14);
+    }
+
+    .tile-title{
+      margin-top:12px;
+      text-align:center;
+      font-size:16px;
+      font-weight:900;
+      line-height:1.2;
+      min-height:20px;
+      overflow-wrap:anywhere;
+    }
+
+    .tile-meta{
+      margin-top:8px;
+      display:flex;
+      justify-content:center;
+      gap:7px;
+      flex-wrap:wrap;
+      min-height:27px;
+    }
+
+    .tile-state{
+      border-radius:999px;
+      padding:5px 8px;
+      font-size:11px;
+      font-weight:900;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background:#fff;
+    }
+
+    .tile-state.ready{ color:#166534; background:var(--good-soft); border-color:#bbf7d0; }
+    .tile-state.loading{ color:#075985; background:#e0f2fe; border-color:#bae6fd; }
+    .tile-state.missing{ color:#92400e; background:var(--warn-soft); border-color:#fde68a; }
+    .tile-state.error{ color:#991b1b; background:var(--danger-soft); border-color:#fecaca; }
+
+    .mini-note{
+      margin-top:18px;
+      padding:13px 14px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:rgba(255,255,255,.80);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+      box-shadow:0 1px 0 rgba(15,23,42,.04);
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:22px;
+      transform:translateX(-50%) translateY(16px);
+      background:#111827;
+      color:#fff;
+      padding:11px 14px;
+      border-radius:999px;
+      font-size:13px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+      z-index:10000;
+      box-shadow:0 12px 24px rgba(0,0,0,.18);
+      max-width:min(92vw, 620px);
+      text-align:center;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.42);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease;
+      z-index:9990;
+    }
+
+    .overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .drawer{
+      position:fixed;
+      top:0;
+      right:0;
+      height:100%;
+      width:min(760px, 96vw);
+      background:rgba(255,255,255,.985);
+      border-left:1px solid var(--border);
+      box-shadow:-20px 0 40px rgba(15,23,42,.18);
+      transform:translateX(102%);
+      transition:transform .22s ease;
+      z-index:9991;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .drawer.show{ transform:translateX(0); }
+
+    .drawer-header{
+      padding:18px 18px 14px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .drawer-header h2{
+      margin:0;
+      font-size:20px;
+      letter-spacing:-.02em;
+    }
+
+    .drawer-body{
+      padding:16px 18px 22px;
+      overflow:auto;
+      flex:1;
+    }
+
+    .drawer-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .action-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:14px;
+      cursor:pointer;
+      transition:transform .14s ease, box-shadow .14s ease, background .14s ease;
+      box-shadow:var(--shadow-soft);
+      font-weight:800;
+    }
+
+    .action-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:var(--shadow);
+    }
+
+    .action-btn.primary{
+      background:var(--accent);
+      color:#fff;
+      border-color:transparent;
+    }
+
+    .action-btn.primary:hover{ background:var(--accent-2); }
+
+    .action-btn.danger{
+      color:var(--danger);
+      border-color:#fecaca;
+      background:#fff;
+    }
+
+    .item-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .item-card{
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      padding:12px;
+    }
+
+    .item-card label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-weight:800;
+    }
+
+    .item-card .row{
+      display:grid;
+      grid-template-columns:88px 1fr 1fr;
+      gap:10px;
+      align-items:start;
+      margin-bottom:10px;
+    }
+
+    .item-card .full-row{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .index-pill{
+      background:#eef2ff;
+      color:#3730a3;
+      border:1px solid #c7d2fe;
+      border-radius:999px;
+      font-size:12px;
+      text-align:center;
+      padding:8px 10px;
+      font-weight:900;
+      height:fit-content;
+      line-height:1.1;
+    }
+
+    .input{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:11px 12px;
+      font-size:14px;
+      outline:none;
+      background:#fff;
+    }
+
+    .input:focus{
+      border-color:rgba(79,70,229,.55);
+      box-shadow:0 0 0 4px rgba(79,70,229,.12);
+    }
+
+    .field-grid{
+      display:grid;
+      grid-template-columns:1fr 150px;
+      gap:10px;
+    }
+
+    .small-help{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+
+    .migration-note{
+      margin-top:8px;
+      color:#92400e;
+      background:var(--warn-soft);
+      border:1px solid #fde68a;
+      border-radius:12px;
+      padding:9px 10px;
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .player-shell{
+      position:fixed;
+      left:50%;
+      bottom:16px;
+      transform:translateX(-50%) translateY(120%);
+      width:min(860px, 96vw);
+      background:rgba(17,24,39,.97);
+      color:#fff;
+      border-radius:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.30);
+      z-index:9992;
+      overflow:hidden;
+      transition:transform .22s ease;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .player-shell.show{ transform:translateX(-50%) translateY(0); }
+
+    .player-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px 10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+
+    .player-title{
+      min-width:0;
+      display:grid;
+      gap:4px;
+    }
+
+    .player-title strong{
+      font-size:15px;
+      line-height:1.2;
+      overflow-wrap:anywhere;
+    }
+
+    .player-title span{
+      font-size:12px;
+      color:rgba(255,255,255,.72);
+      overflow-wrap:anywhere;
+    }
+
+    .player-close{
+      border:0;
+      background:rgba(255,255,255,.10);
+      color:#fff;
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:20px;
+      line-height:1;
+    }
+
+    .player-content{
+      padding:14px 16px 16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .player-meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      font-size:12px;
+      color:rgba(255,255,255,.76);
+    }
+
+    .player-badge{
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+    }
+
+    .player-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .player-link-btn{
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:14px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+    }
+
+    .hidden{ display:none !important; }
+    .sr-only{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
+
+    @media (max-width:860px){
+      .item-card .row{ grid-template-columns:1fr; }
+      .field-grid{ grid-template-columns:1fr; }
+      .index-pill{ width:fit-content; }
+    }
+
+    @media (max-width:720px){
+      .app{ padding:18px 12px 30px; }
+      .topbar{ align-items:center; }
+      .header h1{ font-size:26px; }
+      .control-group{ width:100%; justify-content:flex-start; }
+      .drawer{ width:100vw; border-left:0; }
+      .player-shell{ width:calc(100vw - 12px); bottom:6px; }
+      .grid{ grid-template-columns:repeat(auto-fit, minmax(165px, 1fr)); gap:12px; }
+      .tile{ padding:12px; border-radius:16px; }
+      .tile-button{ height:165px; border-radius:15px; }
+      .control-btn span.label{ display:none; }
+      .control-btn{ padding:0 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="header">
+        <h1>Spanish Soundboard</h1>
+        <p>
+          Manual buttons are the primary controls for live use. Speech triggering is optional,
+          Spanish-first, and never blocks playback if recognition is unavailable.
+        </p>
+        <div class="status-row" aria-live="polite">
+          <div id="speechStatusPill" class="status-pill">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="speechStatusText">Not listening</span>
+          </div>
+          <div id="languagePill" class="status-pill">Language: Spanish</div>
+          <div id="loadStatusPill" class="status-pill warn">Ready: 0 / 15</div>
+          <div id="storageStatusPill" class="status-pill">Code defaults</div>
+        </div>
+      </div>
+
+      <div class="control-group" aria-label="Soundboard controls">
+        <button id="speechToggleBtn" class="control-btn primary" type="button" aria-pressed="false" title="Toggle speech recognition">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3Z"></path>
+            <path d="M19 11a7 7 0 0 1-14 0"></path>
+            <path d="M12 18v3"></path>
+            <path d="M8 21h8"></path>
+          </svg>
+          <span class="label">Speech</span>
+        </button>
+
+        <button id="languageBtn" class="icon-btn lang-btn" type="button" aria-label="Change speech language" title="Change speech language">ES</button>
+
+        <button id="stopAllBtn" class="control-btn danger" type="button" title="Stop all audio">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 7h10v10H7z"></path>
+          </svg>
+          <span class="label">Stop All</span>
+        </button>
+
+        <button id="resetTriggersBtn" class="control-btn" type="button" title="Reset cooldown and duplicate speech detection">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+            <path d="M3 4v6h6"></path>
+          </svg>
+          <span class="label">Reset</span>
+        </button>
+
+        <button id="settingsBtn" class="icon-btn" type="button" aria-label="Open settings" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.2"></circle>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.34 1.06V22a2 2 0 1 1-4 0v-.04a1.7 1.7 0 0 0-.34-1.06 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.06-.34H2a2 2 0 1 1 0-4h.04a1.7 1.7 0 0 0 1.06-.34 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10.34 3V2a2 2 0 1 1 4 0v.04a1.7 1.7 0 0 0 .34 1.06 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .38.13.75.34 1a1.7 1.7 0 0 0 1.06.34H22a2 2 0 1 1 0 4h-.04a1.7 1.7 0 0 0-1.06.34 1.7 1.7 0 0 0-.6 1Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="dashboard" class="grid" aria-label="Sound buttons"></div>
+
+    <div class="mini-note">
+      Direct MP3 URLs preload fastest. The original YouTube source was not copied into
+      <strong>audioUrl</strong>; replace missing URLs in <strong>SOUND_CONFIG</strong> or Settings.
+      Manual clicks stay available even when speech recognition is off, blocked, or unsupported.
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay" aria-hidden="true"></div>
+  <aside id="drawer" class="drawer" aria-label="Settings panel" aria-hidden="true">
+    <div class="drawer-header">
+      <h2>Soundboard Settings</h2>
+      <button id="closeSettingsBtn" class="icon-btn" type="button" aria-label="Close settings" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18"></path>
+          <path d="M6 6 18 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="drawer-actions">
+        <button id="saveBtn" class="action-btn primary" type="button">Save changes</button>
+        <button id="useCodeDefaultsBtn" class="action-btn" type="button">Use code defaults</button>
+        <button id="copyJsonBtn" class="action-btn" type="button">Copy JSON</button>
+      </div>
+
+      <div class="small-help" style="margin-bottom:12px;">
+        Edit titles, cues, direct MP3 URLs, cooldowns, and alternate phrases. Saved browser edits override code defaults until you choose code defaults again.
+      </div>
+
+      <div id="itemList" class="item-list"></div>
+    </div>
+  </aside>
+
+  <div id="playerShell" class="player-shell" aria-hidden="true">
+    <div class="player-top">
+      <div class="player-title">
+        <strong id="playerName">No sound playing</strong>
+        <span id="playerUrl">Manual controls ready</span>
+      </div>
+      <button id="closePlayerBtn" class="player-close" type="button" aria-label="Close player">x</button>
+    </div>
+
+    <div class="player-content">
+      <div class="player-meta">
+        <div id="playerType" class="player-badge">Ready</div>
+        <div id="playerCue" class="player-badge">Cue: none</div>
+      </div>
+
+      <div class="player-actions">
+        <button id="playerStopBtn" class="player-link-btn" type="button">Stop</button>
+        <a id="openAudioBtn" class="player-link-btn hidden" href="#" target="_blank" rel="noopener noreferrer">Open audio</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Ready.</div>
+  <div id="liveRegion" class="sr-only" aria-live="polite"></div>
+
+  <script>
+    // ==========================================
+    // EDIT THESE 15 SOUND DEFINITIONS IN CODE
+    // ==========================================
+    const SOUND_CONFIG = [
+      {
+        title: "Laughing",
+        cue: "muy felices",
+        audioUrl: "",
+        cooldownMs: 2500,
+        alternatePhrases: ["muy feliz", "felices"]
+      },
+      { title: "untitled 2", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 3", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 4", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 5", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 6", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 7", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 8", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 9", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 10", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 11", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 12", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 13", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 14", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] },
+      { title: "untitled 15", cue: "", audioUrl: "", cooldownMs: 2500, alternatePhrases: [] }
+    ];
+
+    const MIGRATION_NOTES = {
+      0: "Original file used a YouTube URL. Replace audioUrl with a direct MP3 link for reliable instant playback."
+    };
+
+    const STORAGE_KEY = "spanish-soundboard-production-v1";
+    const LANG_KEY = "spanish-soundboard-language-v1";
+    const DEFAULT_COOLDOWN_MS = 2500;
+    const DUPLICATE_TRANSCRIPT_MS = 1200;
+    const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const dashboard = document.getElementById("dashboard");
+    const speechToggleBtn = document.getElementById("speechToggleBtn");
+    const languageBtn = document.getElementById("languageBtn");
+    const stopAllBtn = document.getElementById("stopAllBtn");
+    const resetTriggersBtn = document.getElementById("resetTriggersBtn");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const speechStatusPill = document.getElementById("speechStatusPill");
+    const speechStatusText = document.getElementById("speechStatusText");
+    const languagePill = document.getElementById("languagePill");
+    const loadStatusPill = document.getElementById("loadStatusPill");
+    const storageStatusPill = document.getElementById("storageStatusPill");
+    const overlay = document.getElementById("overlay");
+    const drawer = document.getElementById("drawer");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    const itemList = document.getElementById("itemList");
+    const saveBtn = document.getElementById("saveBtn");
+    const useCodeDefaultsBtn = document.getElementById("useCodeDefaultsBtn");
+    const copyJsonBtn = document.getElementById("copyJsonBtn");
+    const playerShell = document.getElementById("playerShell");
+    const playerName = document.getElementById("playerName");
+    const playerUrl = document.getElementById("playerUrl");
+    const playerType = document.getElementById("playerType");
+    const playerCue = document.getElementById("playerCue");
+    const playerStopBtn = document.getElementById("playerStopBtn");
+    const closePlayerBtn = document.getElementById("closePlayerBtn");
+    const openAudioBtn = document.getElementById("openAudioBtn");
+    const toast = document.getElementById("toast");
+    const liveRegion = document.getElementById("liveRegion");
+
+    let currentItems = loadItems();
+    let preloadStates = [];
+    let itemInputs = [];
+    let audioCache = new Map();
+    let activeAudio = null;
+    let activeIndex = -1;
+    let recognition = null;
+    let speechWanted = false;
+    let speechListening = false;
+    let speechErrorMode = false;
+    let triggerTimes = new Map();
+    let lastTranscript = "";
+    let lastTranscriptTime = 0;
+    let toastTimer = null;
+    let language = loadLanguage();
+
+    function safeString(value) {
+      return String(value ?? "").trim();
+    }
+
+    function parseAlternates(value) {
+      if (Array.isArray(value)) {
+        return value.map(safeString).filter(Boolean);
+      }
+      return safeString(value)
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+    }
+
+    function normalizeItem(item, index) {
+      const cooldown = Number(item?.cooldownMs);
+      return {
+        title: safeString(item?.title) || `untitled ${index + 1}`,
+        cue: safeString(item?.cue),
+        audioUrl: safeString(item?.audioUrl),
+        cooldownMs: Number.isFinite(cooldown) && cooldown >= 0 ? cooldown : DEFAULT_COOLDOWN_MS,
+        alternatePhrases: parseAlternates(item?.alternatePhrases)
+      };
+    }
+
+    function normalizeItemList(items) {
+      const source = Array.isArray(items) ? items.slice(0, 15) : [];
+      while (source.length < 15) {
+        source.push({ title: `untitled ${source.length + 1}`, cue: "", audioUrl: "", cooldownMs: DEFAULT_COOLDOWN_MS, alternatePhrases: [] });
+      }
+      return source.map(normalizeItem);
+    }
+
+    function loadItems() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            storageStatusPill && (storageStatusPill.textContent = "Browser edits saved");
+            return normalizeItemList(parsed);
+          }
+        }
+      } catch {}
+      return normalizeItemList(SOUND_CONFIG);
+    }
+
+    function saveItems(items) {
+      currentItems = normalizeItemList(items);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentItems));
+      storageStatusPill.textContent = "Browser edits saved";
+    }
+
+    function loadLanguage() {
+      try {
+        const saved = localStorage.getItem(LANG_KEY);
+        if (saved === "en-US" || saved === "es-ES") return saved;
+      } catch {}
+      return "es-ES";
+    }
+
+    function saveLanguage(nextLanguage) {
+      language = nextLanguage === "en-US" ? "en-US" : "es-ES";
+      try {
+        localStorage.setItem(LANG_KEY, language);
+      } catch {}
+      updateLanguageUI();
+      if (speechWanted) restartRecognition();
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      liveRegion.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1900);
+    }
+
+    function isDirectAudioUrl(url) {
+      if (!url) return false;
+      if (/^data:audio\//i.test(url)) return true;
+      try {
+        const parsed = new URL(url, window.location.href);
+        return /\.(mp3|m4a|aac|wav|ogg)(\?.*)?$/i.test(parsed.pathname + parsed.search);
+      } catch {
+        return /\.(mp3|m4a|aac|wav|ogg)(\?.*)?$/i.test(url);
+      }
+    }
+
+    function stateLabel(index) {
+      const state = preloadStates[index];
+      if (!state) return { text: "Missing MP3", className: "missing" };
+      if (state.status === "ready") return { text: "Ready", className: "ready" };
+      if (state.status === "loading") return { text: "Loading", className: "loading" };
+      if (state.status === "error") return { text: "Audio error", className: "error" };
+      return { text: "Missing MP3", className: "missing" };
+    }
+
+    function updateLoadProgress() {
+      const ready = preloadStates.filter((item) => item.status === "ready").length;
+      const loadable = currentItems.filter((item) => isDirectAudioUrl(item.audioUrl)).length;
+      const errors = preloadStates.filter((item) => item.status === "error").length;
+      const missing = currentItems.length - loadable;
+
+      loadStatusPill.textContent = `Ready: ${ready} / ${currentItems.length}`;
+      loadStatusPill.className = "status-pill";
+      if (errors) loadStatusPill.classList.add("error");
+      else if (ready === currentItems.length) loadStatusPill.classList.add("ready");
+      else loadStatusPill.classList.add("warn");
+
+      loadStatusPill.title = `${ready} ready, ${errors} error, ${missing} missing MP3 URL`;
+      updateTileStates();
+    }
+
+    function preloadAudio() {
+      stopAllAudio(false);
+      audioCache.forEach((entry) => {
+        entry.audio.src = "";
+      });
+      audioCache = new Map();
+      preloadStates = currentItems.map((item) => ({
+        status: isDirectAudioUrl(item.audioUrl) ? "loading" : "missing",
+        error: ""
+      }));
+
+      currentItems.forEach((item, index) => {
+        if (!isDirectAudioUrl(item.audioUrl)) return;
+
+        const audio = new Audio();
+        audio.preload = "auto";
+        audio.src = item.audioUrl;
+        audio.addEventListener("canplaythrough", () => {
+          preloadStates[index] = { status: "ready", error: "" };
+          updateLoadProgress();
+        }, { once: true });
+        audio.addEventListener("loadeddata", () => {
+          if (preloadStates[index].status !== "ready") {
+            preloadStates[index] = { status: "ready", error: "" };
+            updateLoadProgress();
+          }
+        }, { once: true });
+        audio.addEventListener("error", () => {
+          preloadStates[index] = { status: "error", error: "Could not load this audio URL." };
+          updateLoadProgress();
+        });
+        audio.addEventListener("ended", () => {
+          if (activeIndex === index) clearActiveTile();
+        });
+        audioCache.set(index, { audio });
+
+        try {
+          audio.load();
+        } catch {
+          preloadStates[index] = { status: "error", error: "Could not begin preload." };
+        }
+      });
+
+      updateLoadProgress();
+    }
+
+    function openPlayer(item, index, statusText) {
+      playerName.textContent = item.title || `untitled ${index + 1}`;
+      playerUrl.textContent = item.audioUrl || "No direct MP3 URL configured";
+      playerType.textContent = statusText;
+      playerCue.textContent = item.cue ? `Cue: ${item.cue}` : "Cue: none";
+      if (item.audioUrl) {
+        openAudioBtn.href = item.audioUrl;
+        openAudioBtn.classList.remove("hidden");
+      } else {
+        openAudioBtn.classList.add("hidden");
+      }
+      playerShell.classList.add("show");
+      playerShell.setAttribute("aria-hidden", "false");
+    }
+
+    function closePlayer() {
+      playerShell.classList.remove("show");
+      playerShell.setAttribute("aria-hidden", "true");
+    }
+
+    function markTileTriggered(index) {
+      document.querySelectorAll(".tile").forEach((tile, tileIndex) => {
+        tile.classList.toggle("is-active", tileIndex === index);
+        tile.classList.remove("is-triggered");
+      });
+      const tile = document.querySelector(`[data-tile-index="${index}"]`);
+      if (!tile) return;
+      requestAnimationFrame(() => {
+        tile.classList.add("is-triggered");
+        setTimeout(() => tile.classList.remove("is-triggered"), 420);
+      });
+    }
+
+    function clearActiveTile() {
+      activeIndex = -1;
+      document.querySelectorAll(".tile").forEach((tile) => {
+        tile.classList.remove("is-active", "is-triggered");
+      });
+    }
+
+    function stopAllAudio(withToast = true) {
+      if (activeAudio) {
+        activeAudio.pause();
+        try { activeAudio.currentTime = 0; } catch {}
+      }
+      audioCache.forEach(({ audio }) => {
+        if (audio !== activeAudio) {
+          audio.pause();
+          try { audio.currentTime = 0; } catch {}
+        }
+      });
+      activeAudio = null;
+      clearActiveTile();
+      if (withToast) showToast("All audio stopped.");
+    }
+
+    function playSound(index, sourceLabel) {
+      const item = currentItems[index];
+      if (!item) return;
+
+      const cached = audioCache.get(index);
+      const state = preloadStates[index];
+      if (!item.audioUrl) {
+        openPlayer(item, index, "Missing MP3");
+        showToast(`Add a direct MP3 URL for ${item.title}.`);
+        return;
+      }
+      if (!cached || !isDirectAudioUrl(item.audioUrl)) {
+        openPlayer(item, index, "Unsupported source");
+        showToast("Use a direct MP3/audio URL for instant playback.");
+        return;
+      }
+      if (state?.status === "error") {
+        openPlayer(item, index, "Audio error");
+        showToast(`Audio failed to load: ${item.title}`);
+        return;
+      }
+
+      if (activeAudio && activeAudio !== cached.audio) {
+        activeAudio.pause();
+        try { activeAudio.currentTime = 0; } catch {}
+      }
+
+      activeAudio = cached.audio;
+      activeIndex = index;
+      try { activeAudio.currentTime = 0; } catch {}
+
+      markTileTriggered(index);
+      openPlayer(item, index, sourceLabel || "Manual play");
+
+      const playAttempt = activeAudio.play();
+      if (playAttempt && typeof playAttempt.catch === "function") {
+        playAttempt.catch(() => {
+          showToast("Tap a manual button once if the browser blocks autoplay.");
+        });
+      }
+    }
+
+    function normalizeText(text) {
+      return String(text || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function matchTerms(item) {
+      return [item.cue, ...item.alternatePhrases]
+        .map(normalizeText)
+        .filter(Boolean);
+    }
+
+    function findBestMatch(transcript) {
+      const clean = normalizeText(transcript);
+      if (!clean) return null;
+
+      let best = null;
+      currentItems.forEach((item, index) => {
+        matchTerms(item).forEach((term) => {
+          if (clean.includes(term) && (!best || term.length > best.term.length)) {
+            best = { item, index, term, transcript: clean };
+          }
+        });
+      });
+      return best;
+    }
+
+    function triggerFromSpeech(match) {
+      const now = Date.now();
+      const cooldown = match.item.cooldownMs || DEFAULT_COOLDOWN_MS;
+      const last = triggerTimes.get(match.index) || 0;
+      if (now - last < cooldown) return;
+
+      triggerTimes.set(match.index, now);
+      playSound(match.index, `Speech: "${match.term}"`);
+      showToast(`Heard: ${match.term}`);
+    }
+
+    function shouldIgnoreTranscript(cleanTranscript) {
+      const now = Date.now();
+      if (cleanTranscript === lastTranscript && now - lastTranscriptTime < DUPLICATE_TRANSCRIPT_MS) {
+        return true;
+      }
+      lastTranscript = cleanTranscript;
+      lastTranscriptTime = now;
+      return false;
+    }
+
+    function updateLanguageUI() {
+      const isSpanish = language === "es-ES";
+      languageBtn.textContent = isSpanish ? "ES" : "EN";
+      languageBtn.title = isSpanish ? "Speech language: Spanish" : "Speech language: English";
+      languagePill.textContent = isSpanish ? "Language: Spanish" : "Language: English";
+    }
+
+    function setSpeechState(state, message) {
+      speechStatusPill.className = "status-pill";
+      if (state === "listening") speechStatusPill.classList.add("listening");
+      if (state === "error") speechStatusPill.classList.add("error");
+      speechStatusText.textContent = message;
+      speechToggleBtn.setAttribute("aria-pressed", state === "listening" ? "true" : "false");
+    }
+
+    function updateSpeechUI() {
+      if (!SpeechAPI) {
+        speechErrorMode = true;
+        setSpeechState("error", "Error fallback mode");
+        speechToggleBtn.title = "Speech recognition is not supported in this browser";
+        return;
+      }
+      if (speechErrorMode) {
+        setSpeechState("error", "Error fallback mode");
+      } else if (speechListening) {
+        setSpeechState("listening", "Listening");
+      } else {
+        setSpeechState("off", "Not listening");
+      }
+    }
+
+    function createRecognition() {
+      const rec = new SpeechAPI();
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.lang = language;
+
+      rec.onstart = () => {
+        speechListening = true;
+        speechErrorMode = false;
+        updateSpeechUI();
+        showToast("Speech recognition listening.");
+      };
+
+      rec.onresult = (event) => {
+        const result = event.results[event.results.length - 1];
+        const transcript = result && result[0] ? result[0].transcript : "";
+        const clean = normalizeText(transcript);
+        if (!clean || shouldIgnoreTranscript(clean)) return;
+
+        const match = findBestMatch(clean);
+        if (match) triggerFromSpeech(match);
+      };
+
+      rec.onerror = (event) => {
+        speechListening = false;
+        const permissionError = event.error === "not-allowed" || event.error === "service-not-allowed";
+        if (permissionError) {
+          speechWanted = false;
+          speechErrorMode = true;
+          showToast("Microphone permission blocked. Manual buttons still work.");
+        } else if (event.error === "no-speech") {
+          speechErrorMode = false;
+        } else {
+          speechErrorMode = true;
+          showToast("Speech recognition error. Manual fallback is ready.");
+        }
+        updateSpeechUI();
+      };
+
+      rec.onend = () => {
+        speechListening = false;
+        updateSpeechUI();
+        if (speechWanted) {
+          setTimeout(() => {
+            if (!speechWanted) return;
+            try {
+              rec.lang = language;
+              rec.start();
+            } catch {}
+          }, 240);
+        }
+      };
+
+      return rec;
+    }
+
+    function startRecognition() {
+      if (!SpeechAPI) {
+        speechErrorMode = true;
+        updateSpeechUI();
+        showToast("Speech recognition is not supported here. Manual mode is ready.");
+        return;
+      }
+      speechWanted = true;
+      speechErrorMode = false;
+      recognition ||= createRecognition();
+      try {
+        recognition.lang = language;
+        recognition.start();
+      } catch {
+        updateSpeechUI();
+      }
+    }
+
+    function stopRecognition() {
+      speechWanted = false;
+      speechListening = false;
+      try {
+        recognition && recognition.stop();
+      } catch {}
+      updateSpeechUI();
+      showToast("Speech recognition off.");
+    }
+
+    function restartRecognition() {
+      if (!SpeechAPI || !speechWanted) return;
+      try {
+        recognition && recognition.stop();
+      } catch {}
+      setTimeout(startRecognition, 180);
+    }
+
+    function renderDashboard() {
+      const fragment = document.createDocumentFragment();
+      currentItems.forEach((item, index) => {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.dataset.tileIndex = String(index);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tile-button";
+        button.setAttribute("aria-label", `Play ${item.title}`);
+        button.addEventListener("click", () => playSound(index, "Manual play"));
+
+        const inner = document.createElement("div");
+        inner.className = "button-inner";
+
+        const hotword = document.createElement("div");
+        hotword.className = "hotword";
+        hotword.textContent = item.cue || "Add cue phrase";
+
+        const playIcon = document.createElement("div");
+        playIcon.className = "play-icon";
+        playIcon.textContent = "▶";
+
+        inner.appendChild(hotword);
+        inner.appendChild(playIcon);
+        button.appendChild(inner);
+
+        const title = document.createElement("div");
+        title.className = "tile-title";
+        title.textContent = item.title;
+
+        const meta = document.createElement("div");
+        meta.className = "tile-meta";
+        const state = document.createElement("span");
+        state.className = "tile-state missing";
+        state.dataset.tileState = String(index);
+        state.textContent = "Missing MP3";
+        meta.appendChild(state);
+
+        tile.appendChild(button);
+        tile.appendChild(title);
+        tile.appendChild(meta);
+        fragment.appendChild(tile);
+      });
+
+      dashboard.replaceChildren(fragment);
+      updateTileStates();
+    }
+
+    function updateTileStates() {
+      document.querySelectorAll("[data-tile-state]").forEach((node) => {
+        const index = Number(node.dataset.tileState);
+        const label = stateLabel(index);
+        node.textContent = label.text;
+        node.className = `tile-state ${label.className}`;
+      });
+    }
+
+    function renderSettings() {
+      itemList.innerHTML = "";
+      itemInputs = [];
+
+      currentItems.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const pill = document.createElement("div");
+        pill.className = "index-pill";
+        pill.textContent = `Item ${index + 1}`;
+
+        const titleWrap = document.createElement("div");
+        const titleLabel = document.createElement("label");
+        titleLabel.textContent = "Title";
+        const titleInput = document.createElement("input");
+        titleInput.className = "input";
+        titleInput.type = "text";
+        titleInput.value = item.title;
+        titleInput.autocomplete = "off";
+        titleInput.spellcheck = false;
+        titleWrap.append(titleLabel, titleInput);
+
+        const cueWrap = document.createElement("div");
+        const cueLabel = document.createElement("label");
+        cueLabel.textContent = "Cue phrase";
+        const cueInput = document.createElement("input");
+        cueInput.className = "input";
+        cueInput.type = "text";
+        cueInput.value = item.cue;
+        cueInput.placeholder = "Example: muy felices";
+        cueInput.autocomplete = "off";
+        cueInput.spellcheck = false;
+        cueWrap.append(cueLabel, cueInput);
+
+        row.append(pill, titleWrap, cueWrap);
+
+        const fullRow = document.createElement("div");
+        fullRow.className = "full-row";
+
+        const audioWrap = document.createElement("div");
+        const audioLabel = document.createElement("label");
+        audioLabel.textContent = "Direct audio URL";
+        const audioInput = document.createElement("input");
+        audioInput.className = "input";
+        audioInput.type = "url";
+        audioInput.value = item.audioUrl;
+        audioInput.placeholder = "https://example.com/sound.mp3";
+        audioInput.autocomplete = "off";
+        audioInput.spellcheck = false;
+        const audioHelp = document.createElement("div");
+        audioHelp.className = "small-help";
+        audioHelp.textContent = "Direct MP3 links preload fastest. YouTube links are not reliable for instant sound cues.";
+        audioWrap.append(audioLabel, audioInput, audioHelp);
+
+        const fieldGrid = document.createElement("div");
+        fieldGrid.className = "field-grid";
+
+        const altWrap = document.createElement("div");
+        const altLabel = document.createElement("label");
+        altLabel.textContent = "Alternate phrases";
+        const altInput = document.createElement("input");
+        altInput.className = "input";
+        altInput.type = "text";
+        altInput.value = item.alternatePhrases.join(", ");
+        altInput.placeholder = "Comma separated";
+        altInput.autocomplete = "off";
+        altInput.spellcheck = false;
+        altWrap.append(altLabel, altInput);
+
+        const cooldownWrap = document.createElement("div");
+        const cooldownLabel = document.createElement("label");
+        cooldownLabel.textContent = "Cooldown ms";
+        const cooldownInput = document.createElement("input");
+        cooldownInput.className = "input";
+        cooldownInput.type = "number";
+        cooldownInput.min = "0";
+        cooldownInput.step = "100";
+        cooldownInput.value = String(item.cooldownMs);
+        cooldownWrap.append(cooldownLabel, cooldownInput);
+
+        fieldGrid.append(altWrap, cooldownWrap);
+        fullRow.append(audioWrap, fieldGrid);
+
+        if (MIGRATION_NOTES[index] && !item.audioUrl) {
+          const note = document.createElement("div");
+          note.className = "migration-note";
+          note.textContent = MIGRATION_NOTES[index];
+          fullRow.appendChild(note);
+        }
+
+        card.append(row, fullRow);
+        itemList.appendChild(card);
+        itemInputs.push({ titleInput, cueInput, audioInput, altInput, cooldownInput });
+      });
+    }
+
+    function collectSettings() {
+      return itemInputs.map((group, index) => ({
+        title: safeString(group.titleInput.value) || `untitled ${index + 1}`,
+        cue: safeString(group.cueInput.value),
+        audioUrl: safeString(group.audioInput.value),
+        cooldownMs: Number(group.cooldownInput.value) || DEFAULT_COOLDOWN_MS,
+        alternatePhrases: parseAlternates(group.altInput.value)
+      }));
+    }
+
+    function saveSettings() {
+      saveItems(collectSettings());
+      renderDashboard();
+      preloadAudio();
+      showToast("Saved to this browser.");
+    }
+
+    function useCodeDefaults() {
+      localStorage.removeItem(STORAGE_KEY);
+      currentItems = normalizeItemList(SOUND_CONFIG);
+      storageStatusPill.textContent = "Code defaults";
+      renderSettings();
+      renderDashboard();
+      preloadAudio();
+      resetTriggerMemory(false);
+      showToast("Using code defaults.");
+    }
+
+    async function copyJson() {
+      const data = JSON.stringify(collectSettings(), null, 2);
+      try {
+        await navigator.clipboard.writeText(data);
+        showToast("JSON copied.");
+      } catch {
+        showToast("Clipboard blocked. Select and copy from DevTools if needed.");
+      }
+    }
+
+    function resetTriggerMemory(withToast = true) {
+      triggerTimes.clear();
+      lastTranscript = "";
+      lastTranscriptTime = 0;
+      if (withToast) showToast("Trigger cooldowns reset.");
+    }
+
+    function openSettings() {
+      renderSettings();
+      overlay.classList.add("show");
+      drawer.classList.add("show");
+      overlay.setAttribute("aria-hidden", "false");
+      drawer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeSettings() {
+      overlay.classList.remove("show");
+      drawer.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+      drawer.setAttribute("aria-hidden", "true");
+    }
+
+    speechToggleBtn.addEventListener("click", () => {
+      if (speechWanted || speechListening) stopRecognition();
+      else startRecognition();
+    });
+
+    languageBtn.addEventListener("click", () => {
+      saveLanguage(language === "es-ES" ? "en-US" : "es-ES");
+      showToast(`Speech language: ${language === "es-ES" ? "Spanish" : "English"}.`);
+    });
+
+    stopAllBtn.addEventListener("click", () => stopAllAudio(true));
+    resetTriggersBtn.addEventListener("click", () => resetTriggerMemory(true));
+    settingsBtn.addEventListener("click", openSettings);
+    closeSettingsBtn.addEventListener("click", closeSettings);
+    overlay.addEventListener("click", closeSettings);
+    saveBtn.addEventListener("click", saveSettings);
+    useCodeDefaultsBtn.addEventListener("click", useCodeDefaults);
+    copyJsonBtn.addEventListener("click", copyJson);
+    playerStopBtn.addEventListener("click", () => stopAllAudio(true));
+    closePlayerBtn.addEventListener("click", () => {
+      stopAllAudio(false);
+      closePlayer();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeSettings();
+        closePlayer();
+      }
+    });
+
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      storageStatusPill.textContent = "Code defaults";
+    }
+
+    renderDashboard();
+    updateLanguageUI();
+    updateSpeechUI();
+    preloadAudio();
+  </script>
+</body>
+</html>
