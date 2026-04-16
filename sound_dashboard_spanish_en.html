@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sound Dashboard</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --panel:rgba(255,255,255,.94);
+      --panel-strong:#fff;
+      --border:#dbe4f0;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --accent:#4f46e5;
+      --accent-2:#4338ca;
+      --danger:#dc2626;
+      --shadow:0 14px 34px rgba(15,23,42,.10);
+      --shadow-soft:0 8px 18px rgba(15,23,42,.08);
+      --radius:20px;
+      --radius-lg:26px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top, #eef2ff 0%, rgba(238,242,255,0) 42%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      min-height:100vh;
+    }
+
+    .app{
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 26px 18px 34px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:20px;
+      flex-wrap: wrap;
+    }
+
+    .header h1{
+      margin:0;
+      font-size:32px;
+      line-height:1.05;
+      letter-spacing:-0.03em;
+    }
+
+    .header p{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.55;
+      max-width: 920px;
+    }
+
+    .status-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+      align-items:center;
+    }
+
+    .status-pill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.82);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight:700;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .status-pill.on{
+      border-color: rgba(34,197,94,.25);
+      background: rgba(34,197,94,.10);
+      color:#166534;
+    }
+
+    .status-pill.off{
+      border-color: rgba(148,163,184,.35);
+      background: rgba(148,163,184,.10);
+      color:#475569;
+    }
+
+    .icon-group{
+      display:flex;
+      gap:10px;
+      flex:0 0 auto;
+    }
+
+    .icon-btn{
+      border:1px solid var(--border);
+      background:var(--panel);
+      color:var(--text);
+      border-radius: 14px;
+      width: 48px;
+      height: 48px;
+      display:inline-grid;
+      place-items:center;
+      cursor:pointer;
+      box-shadow: var(--shadow-soft);
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s ease;
+      flex:0 0 auto;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .icon-btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow); }
+    .icon-btn:active{ transform: translateY(0); }
+    .icon-btn:disabled{ opacity:.45; cursor:not-allowed; }
+    .icon-btn svg{ width:22px; height:22px; }
+
+    .lang-btn{
+      letter-spacing: .04em;
+      font-size: 12px;
+      padding: 0;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    .tile{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      padding: 16px;
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+
+    .tile:hover{
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .tile-button{
+      width:100%;
+      height: 190px;
+      border:0;
+      border-radius: 18px;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.38), transparent 28%),
+        linear-gradient(145deg, #6366f1, #8b5cf6);
+      transition: transform .14s ease, filter .14s ease;
+      outline:none;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 12px;
+    }
+
+    .tile-button:hover{ filter:brightness(1.03); transform: scale(1.01); }
+    .tile-button:active{ transform: scale(.98); }
+    .tile-button:focus-visible{ box-shadow: 0 0 0 4px rgba(79,70,229,.24); }
+
+    .button-inner{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      pointer-events:none;
+      text-align:center;
+    }
+
+    .hotword{
+      max-width:100%;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.20);
+      color: rgba(255,255,255,.98);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .01em;
+      word-break: break-word;
+      line-height:1.2;
+    }
+
+    .play-icon{
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display:grid;
+      place-items:center;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.20);
+      color:#fff;
+      font-size: 26px;
+      font-weight: 800;
+      text-shadow: 0 4px 16px rgba(0,0,0,.22);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+    }
+
+    .tile-title{
+      margin-top: 12px;
+      text-align:center;
+      font-size: 16px;
+      font-weight: 800;
+      line-height:1.2;
+      min-height: 20px;
+      word-break: break-word;
+    }
+
+    .tile-link{
+      margin-top: 6px;
+      text-align:center;
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 16px;
+      word-break: break-word;
+    }
+
+    .mini-note{
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.76);
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.45;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:22px;
+      transform: translateX(-50%) translateY(16px);
+      background:#111827;
+      color:#fff;
+      padding: 11px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 10000;
+      box-shadow: 0 12px 24px rgba(0,0,0,.18);
+      max-width: min(92vw, 560px);
+      text-align:center;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* drawer */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(15,23,42,.42);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      z-index:9990;
+    }
+    .overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .drawer{
+      position:fixed;
+      top:0;
+      right:0;
+      height:100%;
+      width: min(740px, 96vw);
+      background: rgba(255,255,255,.985);
+      border-left: 1px solid var(--border);
+      box-shadow: -20px 0 40px rgba(15,23,42,.18);
+      transform: translateX(102%);
+      transition: transform .22s ease;
+      z-index:9991;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .drawer.show{
+      transform: translateX(0);
+    }
+
+    .drawer-header{
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .drawer-header h2{
+      margin:0;
+      font-size:20px;
+      letter-spacing:-0.02em;
+    }
+
+    .drawer-body{
+      padding:16px 18px 22px;
+      overflow:auto;
+      flex:1;
+    }
+
+    .drawer-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+
+    .action-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor:pointer;
+      transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .action-btn:hover{
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    .action-btn.primary{
+      background: var(--accent);
+      color:#fff;
+      border-color: transparent;
+    }
+
+    .action-btn.primary:hover{
+      background: var(--accent-2);
+    }
+
+    .action-btn.danger{
+      color: var(--danger);
+      border-color: #fecaca;
+      background:#fff;
+    }
+
+    .item-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .item-card{
+      border:1px solid var(--border);
+      border-radius: 16px;
+      background:#fff;
+      padding: 12px;
+    }
+
+    .item-card label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .item-card .row{
+      display:grid;
+      grid-template-columns: 88px 1fr;
+      gap:10px;
+      align-items:start;
+      margin-bottom: 10px;
+    }
+
+    .index-pill{
+      background:#eef2ff;
+      color:#3730a3;
+      border:1px solid #c7d2fe;
+      border-radius:999px;
+      font-size:12px;
+      text-align:center;
+      padding:8px 10px;
+      font-weight:700;
+      height: fit-content;
+      line-height:1.1;
+    }
+
+    .input{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 14px;
+      outline:none;
+      background:#fff;
+    }
+
+    .input:focus{
+      border-color: rgba(79,70,229,.55);
+      box-shadow: 0 0 0 4px rgba(79,70,229,.12);
+    }
+
+    .small-help{
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height:1.4;
+    }
+
+    /* player */
+    .player-shell{
+      position:fixed;
+      left:50%;
+      bottom: 16px;
+      transform: translateX(-50%) translateY(120%);
+      width: min(860px, 96vw);
+      background: rgba(17,24,39,.97);
+      color:#fff;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.30);
+      z-index:9992;
+      overflow:hidden;
+      transition: transform .22s ease;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .player-shell.show{
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .player-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+
+    .player-title{
+      min-width:0;
+      display:grid;
+      gap:4px;
+    }
+
+    .player-title strong{
+      font-size: 15px;
+      line-height:1.2;
+      word-break:break-word;
+    }
+
+    .player-title span{
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+      word-break:break-word;
+    }
+
+    .player-close{
+      border:0;
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:20px;
+      line-height:1;
+    }
+
+    .player-content{
+      padding: 14px 16px 16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .player-meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      font-size:12px;
+      color: rgba(255,255,255,.76);
+    }
+
+    .player-badge{
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+
+    .audio-wrap{
+      display:grid;
+      gap:10px;
+    }
+
+    audio{
+      width:100%;
+      height: 48px;
+    }
+
+    .player-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .player-link-btn{
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      color:#fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor:pointer;
+      font-size: 14px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .youtube-frame{
+      width:100%;
+      aspect-ratio: 16 / 9;
+      border:0;
+      border-radius: 14px;
+      background:#000;
+    }
+
+    .hidden{ display:none !important; }
+
+    @media (max-width: 720px){
+      .topbar{ align-items:center; }
+      .header h1{ font-size: 25px; }
+      .drawer{ width:100vw; border-left:0; }
+      .item-card .row{ grid-template-columns: 1fr; }
+      .index-pill{ width: fit-content; }
+      .player-shell{ width: calc(100vw - 12px); bottom: 6px; }
+      .grid{ grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+      .tile-button{ height: 170px; }
+      .icon-group{ width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="header">
+        <h1>Sound Dashboard</h1>
+        <p>
+          Bigger tiles. Faster loading. Built-in player. Browser-saved edits. Voice trigger phrases.
+          Use the settings panel to edit titles, links, and the phrase shown on each button.
+        </p>
+        <div class="status-row">
+          <div id="voiceStatusPill" class="status-pill off">Voice: off</div>
+          <div id="voiceLangPill" class="status-pill">Voice language: English</div>
+          <div id="storageStatusPill" class="status-pill">Saved in this browser</div>
+        </div>
+      </div>
+
+      <div class="icon-group">
+        <button id="voiceBtn" class="icon-btn" type="button" aria-label="Start voice recognition" title="Start voice recognition">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3Z"></path>
+            <path d="M19 11a7 7 0 0 1-14 0"></path>
+            <path d="M12 18v3"></path>
+            <path d="M8 21h8"></path>
+          </svg>
+        </button>
+
+        <button id="voiceLangBtn" class="icon-btn lang-btn" type="button" aria-label="Change voice language" title="Voice language">
+          EN
+        </button>
+
+        <button id="settingsBtn" class="icon-btn" type="button" aria-label="Open settings" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.2"></circle>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.34 1.06V22a2 2 0 1 1-4 0v-.04a1.7 1.7 0 0 0-.34-1.06 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.06-.34H2a2 2 0 1 1 0-4h.04a1.7 1.7 0 0 0 1.06-.34 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10.34 3V2a2 2 0 1 1 4 0v.04a1.7 1.7 0 0 0 .34 1.06 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .38.13.75.34 1a1.7 1.7 0 0 0 1.06.34H22a2 2 0 1 1 0 4h-.04a1.7 1.7 0 0 0-1.06.34 1.7 1.7 0 0 0-.6 1Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="dashboard" class="grid"></div>
+
+    <div class="mini-note">
+      Edit the <strong>defaultItems</strong> array in the code to change the starting values.
+      If saved browser data is getting in the way, use <strong>Use code defaults</strong> inside settings.
+      Voice recognition can run in <strong>English</strong> or <strong>Spanish</strong>; use the language button to switch.
+      For voice, set a phrase in each item. That phrase shows on the tile and is what the mic listens for.
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="overlay" class="overlay" aria-hidden="true"></div>
+  <aside id="drawer" class="drawer" aria-label="Settings panel" aria-hidden="true">
+    <div class="drawer-header">
+      <h2>Dashboard Settings</h2>
+      <button id="closeSettingsBtn" class="icon-btn" type="button" aria-label="Close settings" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18"></path>
+          <path d="M6 6 18 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="drawer-actions">
+        <button id="saveBtn" class="action-btn primary" type="button">Save changes</button>
+        <button id="useCodeDefaultsBtn" class="action-btn" type="button">Use code defaults</button>
+        <button id="resetBtn" class="action-btn danger" type="button">Reset to defaults</button>
+        <button id="copyJsonBtn" class="action-btn" type="button">Copy JSON</button>
+      </div>
+
+      <div class="small-help" style="margin-bottom:12px;">
+        Each item gets a title, a link, and a phrase. The phrase is shown on the button and is also used for voice matching.
+      </div>
+
+      <div id="itemList" class="item-list"></div>
+    </div>
+  </aside>
+
+  <!-- Player -->
+  <div id="playerShell" class="player-shell" aria-hidden="true">
+    <div class="player-top">
+      <div class="player-title">
+        <strong id="playerName">Untitled</strong>
+        <span id="playerUrl">No source loaded</span>
+      </div>
+      <button id="closePlayerBtn" class="player-close" type="button" aria-label="Close player">×</button>
+    </div>
+
+    <div class="player-content">
+      <div class="player-meta">
+        <div id="playerType" class="player-badge">Ready</div>
+        <div id="playerPhrase" class="player-badge">Voice phrase: none</div>
+      </div>
+
+      <div id="audioArea" class="audio-wrap">
+        <audio id="audioEl" controls preload="auto"></audio>
+      </div>
+
+      <iframe
+        id="youtubeFrame"
+        class="youtube-frame hidden"
+        title="YouTube player"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+
+      <div class="player-actions">
+        <button id="stopBtn" class="player-link-btn" type="button">Stop</button>
+        <a id="openLinkBtn" class="player-link-btn" href="#" target="_blank" rel="noopener noreferrer">Open source</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Saved.</div>
+
+  <script>
+    // =========================
+    // EDIT STARTING VALUES HERE
+    // =========================
+    const defaultItems = [
+      { title: "Laughing",  link: "https://www.youtube.com/watch?v=_3sCcYNTiCA&list=PLtgdPNF55aClAW8DRzFprnr2XT3_nbkW2&index=6", phrase: "muy felices" },
+      { title: "untitled 2",  link: "", phrase: "" },
+      { title: "untitled 3",  link: "", phrase: "" },
+      { title: "untitled 4",  link: "", phrase: "" },
+      { title: "untitled 5",  link: "", phrase: "" },
+      { title: "untitled 6",  link: "", phrase: "" },
+      { title: "untitled 7",  link: "", phrase: "" },
+      { title: "untitled 8",  link: "", phrase: "" },
+      { title: "untitled 9",  link: "", phrase: "" },
+      { title: "untitled 10", link: "", phrase: "" },
+      { title: "untitled 11", link: "", phrase: "" },
+      { title: "untitled 12", link: "", phrase: "" },
+      { title: "untitled 13", link: "", phrase: "" },
+      { title: "untitled 14", link: "", phrase: "" },
+      { title: "untitled 15", link: "", phrase: "" }
+    ];
+    // =========================
+
+    const STORAGE_KEY = "sound-dashboard-v6";
+    const VOICE_LANG_KEY = "sound-dashboard-voice-lang";
+
+    const dashboard = document.getElementById("dashboard");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const voiceBtn = document.getElementById("voiceBtn");
+    const voiceLangBtn = document.getElementById("voiceLangBtn");
+    const voiceStatusPill = document.getElementById("voiceStatusPill");
+    const voiceLangPill = document.getElementById("voiceLangPill");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    const overlay = document.getElementById("overlay");
+    const drawer = document.getElementById("drawer");
+    const itemList = document.getElementById("itemList");
+    const saveBtn = document.getElementById("saveBtn");
+    const useCodeDefaultsBtn = document.getElementById("useCodeDefaultsBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const copyJsonBtn = document.getElementById("copyJsonBtn");
+    const toast = document.getElementById("toast");
+
+    const playerShell = document.getElementById("playerShell");
+    const playerName = document.getElementById("playerName");
+    const playerUrl = document.getElementById("playerUrl");
+    const playerType = document.getElementById("playerType");
+    const playerPhrase = document.getElementById("playerPhrase");
+    const audioEl = document.getElementById("audioEl");
+    const audioArea = document.getElementById("audioArea");
+    const youtubeFrame = document.getElementById("youtubeFrame");
+    const closePlayerBtn = document.getElementById("closePlayerBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const openLinkBtn = document.getElementById("openLinkBtn");
+
+    const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const VOICE_LANGS = [
+      { value: "en-US", label: "English", short: "EN" },
+      { value: "es-ES", label: "Español", short: "ES" }
+    ];
+
+    let currentItems = loadItems();
+    let itemInputs = [];
+    let recognition = null;
+    let listening = false;
+    let shouldListen = false;
+    let stopRequested = false;
+    let lastFireTime = new Map();
+    let toastTimer = null;
+    let voiceLanguage = loadVoiceLanguage();
+
+    function safeString(value) {
+      return String(value ?? "").trim();
+    }
+
+    function cloneItems(items) {
+      return items.map((item, index) => ({
+        title: safeString(item?.title) || `untitled ${index + 1}`,
+        link: safeString(item?.link),
+        phrase: safeString(item?.phrase)
+      }));
+    }
+
+    function loadItems() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return cloneItems(defaultItems);
+
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return cloneItems(defaultItems);
+
+        const cleaned = parsed.slice(0, 15).map((item, index) => ({
+          title: safeString(item?.title) || `untitled ${index + 1}`,
+          link: safeString(item?.link),
+          phrase: safeString(item?.phrase)
+        }));
+
+        while (cleaned.length < 15) {
+          cleaned.push({
+            title: `untitled ${cleaned.length + 1}`,
+            link: "",
+            phrase: ""
+          });
+        }
+
+        return cleaned;
+      } catch {
+        return cloneItems(defaultItems);
+      }
+    }
+
+    function loadVoiceLanguage() {
+      try {
+        const saved = localStorage.getItem(VOICE_LANG_KEY);
+        if (saved === "en-US" || saved === "es-ES") return saved;
+      } catch {}
+      const browserLang = (navigator.language || navigator.userLanguage || "en-US").toLowerCase();
+      return browserLang.startsWith("es") ? "es-ES" : "en-US";
+    }
+
+    function saveVoiceLanguage(lang) {
+      voiceLanguage = lang === "es-ES" ? "es-ES" : "en-US";
+      try {
+        localStorage.setItem(VOICE_LANG_KEY, voiceLanguage);
+      } catch {}
+      updateVoiceLanguageUI();
+      if (recognition && listening) {
+        restartRecognition();
+      }
+    }
+
+    function saveItems(items) {
+      currentItems = cloneItems(items);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentItems));
+    }
+
+    function clearSavedItems() {
+      localStorage.removeItem(STORAGE_KEY);
+      currentItems = cloneItems(defaultItems);
+      renderSettings();
+      renderDashboard();
+      showToast("Now using code defaults.");
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function openSettings() {
+      overlay.classList.add("show");
+      drawer.classList.add("show");
+      overlay.setAttribute("aria-hidden", "false");
+      drawer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeSettings() {
+      overlay.classList.remove("show");
+      drawer.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+      drawer.setAttribute("aria-hidden", "true");
+    }
+
+    function openPlayer() {
+      playerShell.classList.add("show");
+      playerShell.setAttribute("aria-hidden", "false");
+    }
+
+    function closePlayer() {
+      stopPlayback();
+      playerShell.classList.remove("show");
+      playerShell.setAttribute("aria-hidden", "true");
+    }
+
+    function stopPlayback() {
+      audioEl.pause();
+      audioEl.removeAttribute("src");
+      audioEl.load();
+      youtubeFrame.classList.add("hidden");
+      youtubeFrame.src = "about:blank";
+    }
+
+    function isYouTubeUrl(url) {
+      return /(?:youtube\.com|youtu\.be)/i.test(url);
+    }
+
+    function toYouTubeEmbed(url) {
+      try {
+        const u = new URL(url);
+        let videoId = "";
+
+        if (u.hostname.includes("youtu.be")) {
+          videoId = u.pathname.split("/").filter(Boolean)[0] || "";
+        } else if (u.searchParams.get("v")) {
+          videoId = u.searchParams.get("v");
+        } else {
+          const parts = u.pathname.split("/").filter(Boolean);
+          const embedIndex = parts.indexOf("embed");
+          if (embedIndex >= 0 && parts[embedIndex + 1]) {
+            videoId = parts[embedIndex + 1];
+          }
+        }
+
+        if (!videoId) return "";
+        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`;
+      } catch {
+        return "";
+      }
+    }
+
+    function setPlayerMeta(item, url) {
+      playerName.textContent = item.title || "Untitled";
+      playerUrl.textContent = url || "";
+      playerPhrase.textContent = item.phrase ? `Voice phrase: ${item.phrase}` : "Voice phrase: none";
+    }
+
+    function playSource(item) {
+      const url = safeString(item.link);
+      if (!url) {
+        showToast("No link added yet for this tile.");
+        return;
+      }
+
+      setPlayerMeta(item, url);
+      openLinkBtn.href = url;
+
+      stopPlayback();
+      openPlayer();
+
+      if (isYouTubeUrl(url)) {
+        const embed = toYouTubeEmbed(url);
+        if (!embed) {
+          showToast("Could not read that YouTube link.");
+          return;
+        }
+
+        playerType.textContent = "YouTube";
+        audioArea.classList.add("hidden");
+        youtubeFrame.classList.remove("hidden");
+        youtubeFrame.src = embed;
+      } else {
+        playerType.textContent = "Audio file";
+        youtubeFrame.classList.add("hidden");
+        youtubeFrame.src = "about:blank";
+        audioArea.classList.remove("hidden");
+
+        audioEl.preload = "auto";
+        audioEl.src = url;
+        audioEl.load();
+
+        const playAttempt = audioEl.play();
+        if (playAttempt && typeof playAttempt.catch === "function") {
+          playAttempt.catch(() => {
+            showToast("Tap play in the player if autoplay is blocked.");
+          });
+        }
+      }
+    }
+
+    function displayLabel(item) {
+      return safeString(item.phrase) || safeString(item.title) || "";
+    }
+
+    function renderDashboard() {
+      dashboard.innerHTML = "";
+
+      currentItems.forEach((item, index) => {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tile-button";
+        button.setAttribute("aria-label", `Play ${item.title || `untitled ${index + 1}`}`);
+        button.addEventListener("click", () => playSource(item));
+
+        const inner = document.createElement("div");
+        inner.className = "button-inner";
+
+        const hotword = document.createElement("div");
+        hotword.className = "hotword";
+        hotword.textContent = displayLabel(item) || " ";
+        hotword.style.visibility = displayLabel(item) ? "visible" : "hidden";
+
+        const playIcon = document.createElement("div");
+        playIcon.className = "play-icon";
+        playIcon.textContent = "▶";
+
+        inner.appendChild(hotword);
+        inner.appendChild(playIcon);
+        button.appendChild(inner);
+
+        const title = document.createElement("div");
+        title.className = "tile-title";
+        title.textContent = item.title || `untitled ${index + 1}`;
+
+        const link = document.createElement("div");
+        link.className = "tile-link";
+        link.textContent = item.link ? "link saved" : "no link yet";
+
+        tile.appendChild(button);
+        tile.appendChild(title);
+        tile.appendChild(link);
+        dashboard.appendChild(tile);
+      });
+    }
+
+    function renderSettings() {
+      itemList.innerHTML = "";
+      itemInputs = [];
+
+      currentItems.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+
+        const row1 = document.createElement("div");
+        row1.className = "row";
+
+        const pill = document.createElement("div");
+        pill.className = "index-pill";
+        pill.textContent = `Item ${index + 1}`;
+
+        const titleWrap = document.createElement("div");
+        const titleLabel = document.createElement("label");
+        titleLabel.textContent = "Title";
+        const titleInput = document.createElement("input");
+        titleInput.className = "input";
+        titleInput.type = "text";
+        titleInput.value = item.title ?? `untitled ${index + 1}`;
+        titleInput.placeholder = `untitled ${index + 1}`;
+        titleInput.autocomplete = "off";
+        titleInput.spellcheck = false;
+
+        titleWrap.appendChild(titleLabel);
+        titleWrap.appendChild(titleInput);
+
+        row1.appendChild(pill);
+        row1.appendChild(titleWrap);
+
+        const linkWrap = document.createElement("div");
+        const linkLabel = document.createElement("label");
+        linkLabel.textContent = "Link";
+        const linkInput = document.createElement("input");
+        linkInput.className = "input";
+        linkInput.type = "url";
+        linkInput.value = item.link ?? "";
+        linkInput.placeholder = "https://... or YouTube link";
+        linkInput.autocomplete = "off";
+        linkInput.spellcheck = false;
+
+        const linkHelp = document.createElement("div");
+        linkHelp.className = "small-help";
+        linkHelp.textContent = "Direct audio links load fastest. YouTube links also work in the built-in player.";
+
+        linkWrap.appendChild(linkLabel);
+        linkWrap.appendChild(linkInput);
+        linkWrap.appendChild(linkHelp);
+
+        const phraseWrap = document.createElement("div");
+        phraseWrap.style.marginTop = "12px";
+        const phraseLabel = document.createElement("label");
+        phraseLabel.textContent = "Voice phrase shown on button";
+        const phraseInput = document.createElement("input");
+        phraseInput.className = "input";
+        phraseInput.type = "text";
+        phraseInput.value = item.phrase ?? "";
+        phraseInput.placeholder = "Example: play clap";
+        phraseInput.autocomplete = "off";
+        phraseInput.spellcheck = false;
+
+        const phraseHelp = document.createElement("div");
+        phraseHelp.className = "small-help";
+        phraseHelp.textContent = "Say this phrase while voice recognition is on, and this item will play.";
+
+        phraseWrap.appendChild(phraseLabel);
+        phraseWrap.appendChild(phraseInput);
+        phraseWrap.appendChild(phraseHelp);
+
+        card.appendChild(row1);
+        card.appendChild(linkWrap);
+        card.appendChild(phraseWrap);
+        itemList.appendChild(card);
+
+        itemInputs.push({ titleInput, linkInput, phraseInput });
+      });
+    }
+
+    function collectFromSettings() {
+      return itemInputs.map((group, index) => ({
+        title: safeString(group.titleInput.value) || `untitled ${index + 1}`,
+        link: safeString(group.linkInput.value),
+        phrase: safeString(group.phraseInput.value)
+      }));
+    }
+
+    function persistFromSettings() {
+      const items = collectFromSettings();
+      saveItems(items);
+      renderDashboard();
+      showToast("Saved to this browser.");
+    }
+
+    async function copyJson() {
+      const data = JSON.stringify(collectFromSettings(), null, 2);
+      try {
+        await navigator.clipboard.writeText(data);
+        showToast("JSON copied.");
+      } catch {
+        showToast("Copy failed. Your browser may block clipboard access.");
+      }
+    }
+
+    function resetToDefaults() {
+      if (!confirm("Reset all 15 items back to the code defaults?")) return;
+      clearSavedItems();
+    }
+
+    function normalizeText(text) {
+      return String(text || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s']/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function itemMatchTerms(item) {
+      const terms = [];
+      const phrase = normalizeText(item.phrase);
+      const title = normalizeText(item.title);
+
+      if (phrase) terms.push(phrase);
+      if (title && title !== phrase) terms.push(title);
+
+      return terms;
+    }
+
+    function triggerItem(item, index, reason) {
+      const now = Date.now();
+      const last = lastFireTime.get(index) || 0;
+      if (now - last < 2500) return;
+
+      lastFireTime.set(index, now);
+      playSource(item);
+      showToast(reason || `Played: ${item.title}`);
+    }
+
+    function resolveRecognitionLang() {
+      return voiceLanguage === "es-ES" ? "es-ES" : "en-US";
+    }
+
+    function updateVoiceLanguageUI() {
+      const lang = resolveRecognitionLang();
+      const found = VOICE_LANGS.find((x) => x.value === lang) || VOICE_LANGS[0];
+      voiceLangBtn.textContent = found.short;
+      voiceLangBtn.title = `Voice language: ${found.label}`;
+      voiceLangPill.textContent = `Voice language: ${found.label}`;
+    }
+
+    function createRecognition() {
+      const rec = new SpeechAPI();
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.lang = resolveRecognitionLang();
+      rec.maxAlternatives = 1;
+      return rec;
+    }
+
+    function restartRecognition() {
+      if (!SpeechAPI) return;
+      if (!recognition) {
+        recognition = createRecognition();
+        attachRecognitionEvents();
+      }
+      stopRequested = false;
+      try {
+        recognition.stop();
+      } catch {}
+      setTimeout(() => {
+        if (!shouldListen) return;
+        try {
+          recognition.lang = resolveRecognitionLang();
+          recognition.start();
+        } catch {}
+      }, 120);
+    }
+
+    function attachRecognitionEvents() {
+      recognition.onresult = (event) => {
+        const result = event.results[event.results.length - 1];
+        const transcript = result && result[0] ? result[0].transcript : "";
+        const clean = normalizeText(transcript);
+        if (!clean) return;
+
+        let bestMatch = null;
+        let bestLen = 0;
+
+        currentItems.forEach((item, index) => {
+          for (const term of itemMatchTerms(item)) {
+            if (!term) continue;
+            if (clean.includes(term) && term.length > bestLen) {
+              bestMatch = { item, index, term };
+              bestLen = term.length;
+            }
+          }
+        });
+
+        if (bestMatch) {
+          triggerItem(bestMatch.item, bestMatch.index, `Heard: "${bestMatch.term}"`);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          stopRequested = true;
+          shouldListen = false;
+          listening = false;
+          updateVoiceUI();
+          showToast("Microphone permission blocked.");
+          return;
+        }
+
+        if (event.error === "network") {
+          showToast("Voice recognition network error.");
+        }
+      };
+
+      recognition.onstart = () => {
+        listening = true;
+        updateVoiceUI();
+        showToast("Voice recognition on.");
+      };
+
+      recognition.onend = () => {
+        listening = false;
+        updateVoiceUI();
+
+        if (shouldListen && !stopRequested) {
+          setTimeout(() => {
+            try {
+              recognition.lang = resolveRecognitionLang();
+              recognition.start();
+            } catch {}
+          }, 180);
+        }
+      };
+    }
+
+    function startRecognition() {
+      if (!SpeechAPI) {
+        voiceBtn.disabled = true;
+        voiceBtn.title = "Speech recognition not supported in this browser";
+        showToast("This browser does not support voice recognition.");
+        return;
+      }
+
+      shouldListen = true;
+      stopRequested = false;
+
+      if (!recognition) {
+        recognition = createRecognition();
+        attachRecognitionEvents();
+      }
+
+      try {
+        recognition.lang = resolveRecognitionLang();
+        recognition.start();
+      } catch {
+        showToast("Voice recognition could not start yet.");
+      }
+    }
+
+    function stopRecognition() {
+      shouldListen = false;
+      stopRequested = true;
+      listening = false;
+      updateVoiceUI();
+      try {
+        recognition && recognition.stop();
+      } catch {}
+      showToast("Voice recognition off.");
+    }
+
+    function updateVoiceUI() {
+      if (!SpeechAPI) {
+        voiceStatusPill.textContent = "Voice: unavailable";
+        voiceStatusPill.className = "status-pill off";
+        voiceBtn.disabled = true;
+        voiceLangBtn.disabled = true;
+        return;
+      }
+
+      updateVoiceLanguageUI();
+
+      if (listening) {
+        voiceStatusPill.textContent = "Voice: listening";
+        voiceStatusPill.className = "status-pill on";
+        voiceBtn.title = "Stop voice recognition";
+      } else {
+        voiceStatusPill.textContent = "Voice: off";
+        voiceStatusPill.className = "status-pill off";
+        voiceBtn.title = "Start voice recognition";
+      }
+    }
+
+    voiceBtn.addEventListener("click", () => {
+      if (!SpeechAPI) return;
+      if (listening || shouldListen) stopRecognition();
+      else startRecognition();
+    });
+
+    voiceLangBtn.addEventListener("click", () => {
+      const next = voiceLanguage === "en-US" ? "es-ES" : "en-US";
+      saveVoiceLanguage(next);
+      showToast(`Voice language set to ${next === "es-ES" ? "Spanish" : "English"}.`);
+    });
+
+    settingsBtn.addEventListener("click", () => {
+      renderSettings();
+      openSettings();
+    });
+
+    closeSettingsBtn.addEventListener("click", closeSettings);
+    overlay.addEventListener("click", closeSettings);
+
+    saveBtn.addEventListener("click", persistFromSettings);
+    useCodeDefaultsBtn.addEventListener("click", clearSavedItems);
+    resetBtn.addEventListener("click", resetToDefaults);
+    copyJsonBtn.addEventListener("click", copyJson);
+
+    closePlayerBtn.addEventListener("click", closePlayer);
+    stopBtn.addEventListener("click", () => {
+      stopPlayback();
+      showToast("Stopped.");
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeSettings();
+        closePlayer();
+      }
+    });
+
+    // Initial render
+    renderDashboard();
+    updateVoiceUI();
+
+    // Normalize saved data once on load so the dashboard stays consistent.
+    saveItems(currentItems);
+  </script>
+</body>
+</html>
