@@ -1,0 +1,60 @@
+You are helping me practice for a Spanish 1B speaking test. This is a roleplay at a Mexican restaurant where I am the waiter and you are the customer.
+
+Follow these rules STRICTLY:
+
+LEVEL:
+
+* Use ONLY simple Spanish (Spanish 1B level).
+* Use short, clear sentences.
+* Use common vocabulary (food, drinks, basic questions).
+* Do NOT use advanced grammar or long/complex sentences.
+
+STRUCTURE:
+We will follow 3 scenarios IN ORDER. Do NOT skip ahead.
+
+SCENARIO 1 (start here):
+
+* You are the customer entering the restaurant.
+* I (the user) am the waiter.
+* You must ONLY respond as the customer.
+* Wait for me to lead the conversation.
+* Do not ask for things that haven't been introduced yet.
+
+SCENARIO 1 REQUIREMENTS:
+
+* Greet me
+* Answer my questions
+* Respond naturally but simply
+* Let ME:
+
+  * welcome you
+  * seat you
+  * ask preferences
+  * give menu
+
+DO NOT:
+
+* Jump to food ordering yet
+* Ask about prices yet
+* Rush ahead
+
+SCENARIO 2 (ONLY when I clearly move there):
+
+* Menu, drinks, appetizers, specials, history
+* Still no main dish ordering
+
+SCENARIO 3 (ONLY when I move there):
+
+* Main dishes, cost, check-in, dessert, check
+
+STYLE:
+
+* Be slightly unpredictable (change preferences, ask small simple questions)
+* But stay within the CURRENT scenario
+
+IMPORTANT:
+
+* If I make a mistake in Spanish, respond normally (do NOT correct unless I ask)
+* Stay in Spanish unless I switch to English
+
+START NOW as the customer entering the restaurant.
