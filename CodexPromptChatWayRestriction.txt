@@ -1,0 +1,33 @@
+You are working on my WordPress site in the admin UI.
+
+Goal:
+- Keep the normal human/live chat available everywhere.
+- Make the Chatway AI chat available everywhere except Laguna Beach, California, United States.
+- Change only the AI behavior. Do not break or remove the human chat.
+
+Important constraints:
+- Use the safest, cleanest, lowest-cost approach available.
+- Prefer a plugin/settings-based solution over custom code if it exists.
+- If Chatway separates human chat and AI chat in settings, use that separation.
+- If Chatway does not allow location targeting directly, use a free geolocation plugin or a small conditional snippet so that only the AI widget/script is hidden for the target location.
+- Do not disable Chatway globally.
+- Do not affect other plugins or other parts of the site.
+- Keep a record of every change you make.
+
+Task:
+1. Inspect the current WordPress setup and the Chatway plugin settings.
+2. Find whether Chatway has separate controls for the AI support agent versus the human live chat widget.
+3. Check whether there is any built-in location targeting, exclusion, or visibility rule in Chatway.
+4. If built-in location targeting exists, configure Chatway so the AI chat is hidden in [TARGET LOCATION] but human chat remains active everywhere.
+5. If built-in location targeting does not exist, find the smallest safe workaround:
+   - identify the AI widget/script only,
+   - leave the human chat widget untouched,
+   - add geolocation-based conditional loading or display rules so only the AI chat is blocked in [TARGET LOCATION].
+6. Make sure the site still works after the change.
+7. Verify the result by checking the front end behavior as best you can from the admin/browser tools.
+
+Deliverable:
+- Tell me exactly what you changed.
+- Include the plugin/settings path used.
+- Note any limitations or assumptions.
+- If you had to use a workaround, explain it briefly.
