@@ -1,0 +1,12 @@
+Make the following additoions/changes:
+
+1. In settings, shift the toggles over to the left so they are visble and more easily clickable.No getting them cut off my side.
+2. For Level 1 Vocab, make the system exept escritorio and pupitre for desk.
+3. Add a new module called "Mayo Madness Level 2 Vocab" liek teh level 1 vocab but with tehse terms:
+Book — libro
+Door — puerta
+Window — ventana
+Computer — computadora / ordenador
+Flag — bandera
+Whiteboard — pizarra / pizarra blanca
+Backpack — mochila
