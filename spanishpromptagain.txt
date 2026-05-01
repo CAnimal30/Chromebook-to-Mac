@@ -1,0 +1,40 @@
+Add a new module named "Mayo Madness Level 2 Rapid Fire Translations" and have it quiz people on these things:
+Sentences
+I have 5 tall sisters with blue eyes
+→ Tengo cinco hermanas altas con ojos azules
+We live at the beach
+→ Vivimos en la playa
+My friends go to the beach every day
+→ Mis amigos van a la playa todos los días
+You need to eat more food
+→ Necesitas comer más comida
+I am going to go to the store
+→ Voy a ir a la tienda
+
+include variations too (ex: Yo se)
+
+Add a new module named "Rapid Fire Regular Verb Conjugations" and have it quiz pople on thse things:
+We work → Trabajamos
+We play → Jugamos
+We talk → Hablamos
+We watch → Miramos / Vemos (both work depending on context)
+We see → Vemos
+We run → Corremos
+We clean → Limpiamos
+We dance → Bailamos
+
+Add a new module named "Rapid Fire Irregular Verb Conjugations" and have it quiz pople on thse things:
+We have → Tenemos
+We can → Podemos
+I know → Sé / Conozco (“sé” = know facts, “conozco” = know people/places)
+I say/tell → Digo
+I leave/go out → Salgo
+I do/make → Hago
+They go → Van
+We are (ser) → Somos
+We are (estar) → Estamos
+
+
+
+
+Then also check all spanish translations for whole app, ensure they are correct, and allow variatins like the above one mentioned.
