@@ -1,0 +1,97 @@
+You are editing an existing single-file Spanish learning web app (index.html). The app already has multiple “Mayo Madness” modules implemented.
+
+1. Refactor Module Structure
+Combine all existing Mayo Madness modules into a single parent module called:
+"Mayo Madness"
+Inside this parent module:
+Each previous Mayo Madness module becomes a submodule
+Behavior:
+The main "Mayo Madness" module should be collapsible/expandable and toggleable
+Each submodule inside it should also be independently togglable
+Maintain existing content and functionality of each module
+2. Add Premium Access System
+Add a new "Premium Access" button next to the Settings button:
+Style it with a star icon (★) to distinguish it
+When clicked:
+Prompt the user for a password
+Input field must:
+Hide typed characters (password type, show dots)
+Password:
+"ibelikesheesh"
+Behavior:
+Until the correct password is entered:
+The entire Mayo Madness module is hidden or disabled
+After correct password:
+Unlock and display the Mayo Madness module
+Keep it unlocked for the session (no need to re-enter unless page reload logic already exists)
+3. Add New Submodule
+Inside the Mayo Madness parent module, add a new submodule:
+Title: "Mayo Madness Level 3: Rapid Fire Translations"
+Content requirements:
+Include rapid-fire translation exercises (attahced below)
+Cover multiple Spanish variations, including:
+Subject variations (yo, tú, él/ella, nosotros, ellos)
+Regional variations where relevant (e.g., “ustedes” vs “vosotros” if applicable)
+Verb conjugation variations (present, past, etc. if already used elsewhere in app)
+Match formatting and interaction style of existing modules
+4. Code Requirements
+Keep everything within the existing index.html file (no external files)
+Reuse existing styles, components, and patterns wherever possible
+Do not break existing functionality
+Keep code clean, readable, and consistent with the current structure
+
+
+
+Rapid Fire Translation Exercises:
+
+🌐 Rapid Fire Translations (with variations)
+1–4 Sentences
+1. We are in a hurry and we are hungry
+Estamos apurados y tenemos hambre
+Nosotros estamos apurados y tenemos hambre
+Estamos con prisa y tenemos hambre (more common in Spain)
+2. I am close to the beach
+Estoy cerca de la playa
+Yo estoy cerca de la playa
+3. They live far from the school
+Ellos viven lejos de la escuela
+Viven lejos de la escuela
+Ellos viven lejos del colegio (“colegio” used in many countries)
+4. She has to play in a game today
+Ella tiene que jugar en un partido hoy
+Tiene que jugar en un partido hoy
+Ella debe jugar en un juego hoy (“debe” = “must/should” nuance)
+Past Tense / Single Phrases
+1. We had
+Tuvimos (completed action)
+Teníamos (ongoing/past habit)
+Nosotros tuvimos / nosotros teníamos
+2. We could
+Pudimos (managed to do it)
+Podíamos (used to be able to / could in general)
+Nosotros pudimos / nosotros podíamos
+3. I knew
+Supe (found out)
+Sabía (already knew)
+Yo supe / yo sabía
+4. I said / told
+Dije
+Yo dije
+5. I was (in a place)
+Estuve (temporary, completed)
+Estaba (ongoing)
+Yo estuve / yo estaba
+6. I did / made
+Hice
+Yo hice
+Final Sentences
+5. They go to bed very late
+Ellos se acuestan muy tarde
+Se acuestan muy tarde
+7. They went
+Fueron (ir = to go)
+Ellos fueron
+8. We were (estar)
+Estuvimos (completed)
+Estábamos (ongoing)
+Nosotros estuvimos / nosotros estábamos
