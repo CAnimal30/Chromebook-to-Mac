@@ -1,0 +1,167 @@
+Yep — this is very doable. Since your site is already on GitHub Pages, you’re like 80% done already.
+
+One important thing first though:
+
+JS.ORG is mainly for JavaScript-related projects, tools, games, libraries, etc. Your game site (`InfernoDrift`) should qualify fine as long as it actually has content and isn’t just a blank placeholder. ([GitHub][1])
+
+# What your final URL could look like
+
+Instead of:
+
+```text
+canimal4.github.io/InfernoDrift
+```
+
+you could get:
+
+```text
+infernodrift.js.org
+```
+
+or maybe:
+
+```text
+idrift.js.org
+inferno-game.js.org
+```
+
+(if the first one is taken)
+
+---
+
+# SUPER SIMPLE STEP-BY-STEP
+
+# Step 1 — Make sure GitHub Pages works
+
+Open your current site:
+
+```text
+https://canimal4.github.io/InfernoDrift
+```
+
+If it loads, good.
+
+---
+
+# Step 2 — Add custom domain in GitHub
+
+Go to your repo:
+
+[InfernoDrift repo settings](https://github.com/canimal4/InfernoDrift/settings/pages?utm_source=chatgpt.com)
+
+Then:
+
+1. Scroll to **Custom domain**
+2. Enter:
+
+```text
+infernodrift.js.org
+```
+
+3. Save
+
+GitHub will automatically create/update the `CNAME` stuff for you.
+
+---
+
+# Step 3 — Fork the JS.ORG repo
+
+Go here:
+
+[JS.ORG GitHub repo](https://github.com/js-org/js.org?utm_source=chatgpt.com)
+
+Click:
+
+* **Fork**
+* create fork on your account
+
+---
+
+# Step 4 — Use this Codex prompt
+
+This is the easiest part honestly.
+
+Open:
+
+* [OpenAI Codex](https://chatgpt.com/codex?utm_source=chatgpt.com)
+* OR regular ChatGPT with Codex access
+
+Then paste this EXACT prompt:
+
+```text
+I forked the js-org/js.org repository.
+
+Help me create a pull request to register the domain infernodrift.js.org for my GitHub Pages site:
+
+https://canimal4.github.io/InfernoDrift
+
+Please:
+1. Find the correct file to edit
+2. Add the proper DNS entry
+3. Commit the change
+4. Help me open the pull request correctly
+
+My GitHub username is canimal4.
+```
+
+Codex should basically walk you through the rest.
+
+---
+
+# Step 5 — Wait for approval
+
+JS.ORG maintainers usually:
+
+* review it
+* check your site
+* merge it
+
+Usually within:
+
+* a few hours
+* maybe a day
+
+Then:
+
+```text
+https://infernodrift.js.org
+```
+
+will work automatically. ([GitHub][1])
+
+---
+
+# VERY IMPORTANT
+
+Your site should:
+
+* actually contain the game
+* not be empty
+* not instantly redirect somewhere else
+
+Otherwise they may reject it. ([GitHub][1])
+
+---
+
+# If infernodrift.js.org is taken
+
+Try:
+
+* `infernodrift-game.js.org`
+* `playinferno.js.org`
+* `driftburn.js.org`
+* `infernodrive.js.org`
+
+---
+
+# Tiny tip
+
+Once this works, also turn on:
+
+* **Enforce HTTPS**
+
+in GitHub Pages settings.
+
+Free SSL 🔥
+
+[1]: https://github.com/js-org/js.org?utm_source=chatgpt.com "GitHub - js-org/js.org: Dedicated to JavaScript and its awesome community since 2015"
