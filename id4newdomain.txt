@@ -1,0 +1,112 @@
+Step-by-step for getting a free thedev.id domain
+
+You’re using:
+
+https://canimal4.github.io/InfernoDrift
+
+and you want something cleaner like:
+
+infernodrift.thedev.id
+
+The nice thing about thedev.id is that it’s usually easier/faster than JS.ORG.
+
+Step 1 — Pick your subdomain
+
+Examples:
+
+infernodrift.thedev.id
+playinferno.thedev.id
+idrift.thedev.id
+
+Try to keep it:
+
+short
+memorable
+lowercase
+
+For this guide I’ll use:
+
+infernodrift.thedev.id
+Step 2 — Add custom domain in GitHub Pages
+
+Go here:
+
+GitHub Pages settings for InfernoDrift
+
+Then:
+
+Find Custom domain
+Enter:
+infernodrift.thedev.id
+Click Save
+
+GitHub should create/update the CNAME file automatically.
+
+Step 3 — Fork the repo
+
+Go to:
+
+thedev.id GitHub repository
+
+Click:
+
+Fork
+create fork on your GitHub account
+Step 4 — Use this Codex prompt
+
+Open:
+
+OpenAI Codex
+OR ChatGPT with Codex access
+
+Paste this EXACT prompt:
+
+I forked the upsetjs/thedev.id repository.
+
+Help me claim the subdomain infernodrift.thedev.id for my GitHub Pages website:
+
+https://canimal4.github.io/InfernoDrift
+
+Please:
+1. Find the correct file to edit
+2. Add the proper configuration entry
+3. Commit the change
+4. Help me open the pull request correctly
+
+My GitHub username is canimal4.
+
+Codex should:
+
+locate the claim file
+generate the proper JSON/YAML entry
+help create the PR
+Step 5 — Open the pull request
+
+After Codex finishes:
+
+Push changes to your fork
+Click:
+Compare & pull request
+Submit it
+
+The maintainers will review it.
+
+Step 6 — Wait for approval
+
+Once merged, your site should work at:
+
+https://infernodrift.thedev.id
+
+Usually after DNS propagation:
+
+a few minutes
+sometimes a couple hours
+Important
+
+Your GitHub Pages site should:
+
+already be public
+actually load
+not be blank/erroring
+
+Otherwise the request may get denied.
