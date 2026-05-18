@@ -1,0 +1,53 @@
+You are helping me improve a website strategy document for my teacher’s real estate website.
+
+First, read the attached PDF carefully.
+Then rewrite it so it is easier to understand, easier to execute, and better aligned with modern SEO, AI search, and human usability.
+
+Main goal:
+Create a practical, high-impact version of the PDF that helps the website perform well in the age of AI search and AI agents.
+
+Project context:
+- The website is a real estate website built on Carrot (carrot.com).
+- My teacher uses Carrot but does not own the platform itself.
+- The audience is both humans and AI systems.
+
+Primary goals, in order of importance:
+1. Make the website easier for AI chatbots and AI search systems to understand, cite, and recommend.
+2. Help AI agents find, interpret, and use the site effectively.
+3. Keep the site strong for traditional SEO.
+4. Keep the site easy, clear, and useful for human visitors.
+5. Add any other improvements that would help the site succeed in the current AI-driven web.
+
+What I want from you:
+- Rewrite the PDF’s 10 recommendations into a clearer, more actionable version.
+- Make each item easier to follow and easier to implement.
+- Prioritize the recommendations by impact and effort.
+- Explain what each recommendation does, why it matters, and how to do it.
+- Point out anything missing from the original PDF that should be added.
+- If there are conflicting ideas, resolve them and explain the best choice.
+- Keep the final result practical, specific, and focused on getting the best results.
+
+Output format:
+1. A short executive summary
+2. A prioritized list of the 10 recommendations
+3. For each recommendation:
+   - What it means
+   - Why it matters
+   - How to implement it
+   - Difficulty level
+   - Impact level
+4. A final section with extra AI-era website improvements that should be considered
+5. A simple next-step checklist
+
+Style:
+- Clear
+- Professional
+- Easy to follow
+- Specific
+- No fluff
+- No vague advice
+
+Important:
+- Treat this like a strategic improvement task, not just a summary.
+- Focus on real-world actions that can actually be done on a Carrot-based real estate site.
+- If something depends on Carrot’s limitations, say so clearly and suggest the closest workable alternative.
